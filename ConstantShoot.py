@@ -1,4 +1,5 @@
-# This code implements a 3D rod model for plant shoots under the assumption that both the length and the stiffnesses do not change, while the plant responses to gravity (sensed by means of statoliths), bending and an endogenous oscillator are taken into account.
+''' This code implements a 3D rod model for plant shoots under the assumption that both the length and the stiffnesses do not change, 
+while the plant responses to gravity (sensed by means of statoliths), bending and an endogenous oscillator are taken into account.'''
 
 from __future__ import print_function
 from __future__ import unicode_literals
@@ -222,7 +223,7 @@ Tm     = Constant(Tau_m)
 Tmp    = Constant(Tau_mp)
 Ts     = Constant(Tau_s)
 Ta     = Constant(Tau_a)
-s      = Expression('x[0]', degree=1)
+s      = Expression('x[0]', degree=1) # arc length coordinate
 length = Constant(L0)
 v1     = Expression('cos(omega*t)', omega=2*np.pi*Tau_s/Tau_e, t=0, degree=1) # internal oscillator component (along d1)
 v2     = Expression('sin(omega*t)', omega=2*np.pi*Tau_s/Tau_e, t=0, degree=1) # internal oscillator component (along d2)
@@ -241,21 +242,21 @@ chi_n, phi_n, psi_n, u1S_n, u2S_n, u3S_n, w1_n, w2_n, wp1_n, wp2_n, alphaH_n, th
 U = Function(V)
 chi, phi, psi, u1S, u2S, u3S, w1, w2, wp1, wp2, alphaH, thetaH = split(U)
 # Functional defined by using backward Euler in time
-n1 = p1+q1*(length-s) # load - e1 component
-n2 = p2+q2*(length-s) # load - e2 component
-n3 = p3+q3*(length-s) # load - e3 component 
-u1 = (psi.dx(0)*sin(chi)-phi.dx(0)*cos(chi)*sin(psi))
+n1 = p1+q1*(length-s) # resultant contact force - e1 component
+n2 = p2+q2*(length-s) # resultant contact force - e2 component
+n3 = p3+q3*(length-s) # resultant contact force - e3 component 
+u1 = (psi.dx(0)*sin(chi)-phi.dx(0)*cos(chi)*sin(psi)) # flexural strain 1
 U1 = u1-u1S
-u2 = (psi.dx(0)*cos(chi)+phi.dx(0)*sin(chi)*sin(psi))
+u2 = (psi.dx(0)*cos(chi)+phi.dx(0)*sin(chi)*sin(psi)) # flexural strain 2
 U2 = u2-u2S
-u3 = (chi.dx(0)+phi.dx(0)*cos(psi))
+u3 = (chi.dx(0)+phi.dx(0)*cos(psi)) # torsional strain
 U3 = u3-u3S
 m1 = B*(cos(psi)*cos(phi)*(U1*cos(chi)-U2*sin(chi))-sin(phi)*(U1*sin(chi)+U2*cos(chi))) \
-     + muJ*U3*sin(psi)*cos(phi) # e1 component of the momentum
+     + muJ*U3*sin(psi)*cos(phi) # resultant contact couple - e1 component
 m2 = B*(cos(psi)*sin(phi)*(U1*cos(chi)-U2*sin(chi))+cos(phi)*(U1*sin(chi)+U2*cos(chi))) \
-     + muJ*U3*sin(psi)*sin(phi) # e2 component of the momentum
+     + muJ*U3*sin(psi)*sin(phi) # resultant contact couple - e2 component
 m3 = -B*sin(psi)*(U1*cos(chi)-U2*sin(chi)) \
-     + muJ*U3*cos(psi)          # e3 component of the momentum
+     + muJ*U3*cos(psi)          # resultant contact couple - e3 component
 u1_rp = (psi_rp.dx(0)*sin(chi_rp)-phi_rp.dx(0)*cos(chi_rp)*sin(psi_rp))
 u2_rp = (psi_rp.dx(0)*cos(chi_rp)+phi_rp.dx(0)*sin(chi_rp)*sin(psi_rp))
 H1_r = cos(thetaH_r)
@@ -288,11 +289,11 @@ U2_k = u2_k-u2S_t
 u3_k = chi_t.dx(0)+phi_t.dx(0)*cos(psi_k)
 U3_k = u3_k-u3S_t
 m1_k = B*(cos(psi_k)*cos(phi_k)*(U1_k*cos(chi_k)-U2_k*sin(chi_k)) -sin(phi_k)*(U1_k*sin(chi_k)+U2_k*cos(chi_k))) \
-       + muJ*U3_k*sin(psi_k)*cos(phi_k) # e1 component of the momentum
+       + muJ*U3_k*sin(psi_k)*cos(phi_k)
 m2_k = B*(cos(psi_k)*sin(phi_k)*(U1_k*cos(chi_k)-U2_k*sin(chi_k))+cos(phi_k)*(U1_k*sin(chi_k)+U2_k*cos(chi_k))) \
-       + muJ*U3_k*sin(psi_k)*sin(phi_k) # e2 component of the momentum
+       + muJ*U3_k*sin(psi_k)*sin(phi_k)
 m3_k = -B*sin(psi_k)*(U1_k*cos(chi_k)-U2_k*sin(chi_k)) \
-       + muJ*U3_k*cos(psi_k)          # e3 component of the momentum
+       + muJ*U3_k*cos(psi_k)
 RHS_alpha_k = cos(alphaH_k)*sin(psi_k)*sin(phi_k)+(cos(psi_k)*sin(chi_k)*sin(phi_k)-cos(chi_k)*cos(phi_k))*sin(alphaH_k)
 RHS_theta_k = cos(thetaH_k)*( cos(alphaH_k)*(cos(chi_k)*cos(phi_k)-cos(psi_k)*sin(chi_k)*sin(phi_k))+sin(alphaH_k)*sin(psi_k)*sin(phi_k) ) -sin(thetaH_k)*( cos(phi_k)*sin(chi_k)+cos(chi_k)*cos(psi_k)*sin(phi_k) ) 
 a = - m1_k*test_chi.dx(0)*dx \
