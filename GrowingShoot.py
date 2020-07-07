@@ -1,4 +1,6 @@
-# This code implements a 3D rod model for growing plant shoots. Growth is localized at the organ tip, in a growing region of constant length. This code includes lignification (by rod stiffening), plant responses to gravity (sensed by means of statoliths), to bending (proprioception) and an endogenous oscillator.
+'''This code implements a 3D rod model for growing plant shoots. Growth is localized at the organ tip, in a growing region of constant length. 
+This code includes lignification (by rod stiffening), plant responses to gravity (sensed by means of statoliths), to bending (proprioception) 
+and an endogenous oscillator.'''
 
 from __future__ import print_function
 from __future__ import unicode_literals
@@ -158,12 +160,12 @@ Tau_l  = 6*24*60*60   # s - Maturation/Lignification time
 
 # Geometry
 L0 = 6.8E-2     # m - initial length
-lg = 6E-2      # m - growing zone
+lg = 6E-2       # m - growing zone
 R  = 5E-4       # m - radius
 A  = np.pi*R**2 # m^2 - cross sectional area
 
 # BioMechanical properties of plant tissue
-Lig  = 200
+Lig  = 200          # rod stiffening ratio
 EY   = 10E+6        # N/m^2 - Young Modulus
 I    = np.pi*R**4/4 # m^4 - Second moment of inertia
 B0   = EY*I         # Bending stiffness
@@ -289,28 +291,24 @@ Tmp    = Constant(Tau_mp)
 Ts     = Constant(Tau_s)
 Ta     = Constant(Tau_a)
 stretch= Expression('x[0]<(L0-lg) ? 1 : (x[0]>=(L0-lg*exp(-t*ts/tg)) ? exp(t*ts/tg) : lg/(L0-x[0]))', 
-                  L0=L0, lg=lg, ts=Tau_s, tg=Tau_g, t=0., degree=1)
+                  L0=L0, lg=lg, ts=Tau_s, tg=Tau_g, t=0., degree=1) # stretch
 stretch_rp = Expression('x[0]<(L0-lg) ? 1 : (x[0]>=(L0-lg*exp(-t*ts/tg)) ? exp(t*ts/tg) : lg/(L0-x[0]))', 
-                  L0=L0, lg=lg, ts=Tau_s, tg=Tau_g, t=-Tau_rp/Tau_s, degree=1)
+                  L0=L0, lg=lg, ts=Tau_s, tg=Tau_g, t=-Tau_rp/Tau_s, degree=1) # stretch evaluated at previous times, according to the proprioceptive delay
 s      = Expression('x[0]<(L0-lg) ? x[0] : (x[0]>=(L0-lg*exp(-t*ts/tg)) ? (Lt-(L0-x[0])*exp(t*ts/tg)):((x[0]<=(L0-lg*exp(-tc0*ts/tg)) ? (L0*exp(log10(lg/(L0-x[0]))/log10(exp(1)))):((L0>lg ? L0:lg)+lg*(log10(lg/(L0-x[0]))/log10(exp(1))-(tc0*ts>0 ? tc0*ts/tg:0))))-lg) )', 
-                  L0=L0, lg=lg, ts=Tau_s, tg=Tau_g, t=0., Lt=L0, tc0=Tc0, degree=1)
-rg     = Expression('x[0]>=(L0-lg*exp(-t*ts/tg)) ? 1 : 0',
-                  L0=L0, lg=lg, ts=Tau_s, tg=Tau_g, t=0., degree=1)
+                  L0=L0, lg=lg, ts=Tau_s, tg=Tau_g, t=0., Lt=L0, tc0=Tc0, degree=1) # motion
+rg     = Expression('x[0]>=(L0-lg*exp(-t*ts/tg)) ? 1 : 0', L0=L0, lg=lg, ts=Tau_s, tg=Tau_g, t=0., degree=1) # 1 in the growing region, 0 otherwise
 length = Expression('t<=tc0 ? (L0*exp(t*ts/tg)):((L0>lg ? L0:lg)+lg*(t*ts-(tc0*ts>0 ? tc0*ts:0))/tg)',
-                  L0=L0, lg=lg, ts=Tau_s, tg=Tau_g, t=0., tc0=Tc0, degree=1)
+                  L0=L0, lg=lg, ts=Tau_s, tg=Tau_g, t=0., tc0=Tc0, degree=1)  # current total length
 v1     = Expression('cos(omega*t)', omega=2*np.pi*Tau_s/Tau_e, t=0, degree=1) # internal oscillator component (along d1)
 v2     = Expression('sin(omega*t)', omega=2*np.pi*Tau_s/Tau_e, t=0, degree=1) # internal oscillator component (along d2)
 
 # Define variational problem in the reference domain [0,L0]
-test_chi, test_phi, test_psi, test_u1S, test_u2S, test_u3S, test_w1, test_w2, test_wp1, test_wp2,\
-test_alphaH, test_thetaH = TestFunctions(V)
+test_chi, test_phi, test_psi, test_u1S, test_u2S, test_u3S, test_w1, test_w2, test_wp1, test_wp2, test_alphaH, test_thetaH = TestFunctions(V)
 # Retarded unknowns
 U_r  = Function(V)
-chi_r, phi_r, psi_r, u1S_r, u2S_r, u3S_r, w1_r, w2_r, wp1_r, wp2_r,\
-alphaH_r, thetaH_r = split(U_r) # retarded functions for gravitropic delay
+chi_r, phi_r, psi_r, u1S_r, u2S_r, u3S_r, w1_r, w2_r, wp1_r, wp2_r, alphaH_r, thetaH_r = split(U_r) # retarded functions for gravitropic delay
 U_rp  = Function(V)
-chi_rp, phi_rp, psi_rp, u1S_rp, u2S_rp, u3S_rp, w1_rp, w2_rp, wp1_rp, wp2_rp,\
-alphaH_rp, thetaH_rp = split(U_rp) # retarded functions for gravitropic delay
+chi_rp, phi_rp, psi_rp, u1S_rp, u2S_rp, u3S_rp, w1_rp, w2_rp, wp1_rp, wp2_rp, alphaH_rp, thetaH_rp = split(U_rp) # retarded functions for gravitropic delay
 # Previous step unknowns
 U_n = Function(V)
 chi_n, phi_n, psi_n, u1S_n, u2S_n, u3S_n, w1_n, w2_n, wp1_n, wp2_n, alphaH_n, thetaH_n = split(U_n)
@@ -318,21 +316,21 @@ chi_n, phi_n, psi_n, u1S_n, u2S_n, u3S_n, w1_n, w2_n, wp1_n, wp2_n, alphaH_n, th
 U = Function(V)
 chi, phi, psi, u1S, u2S, u3S, w1, w2, wp1, wp2, alphaH, thetaH = split(U)
 # Functional defined by using backward Euler in time
-n1 = p1+q1*(length-s) # load - e1 component
-n2 = p2+q2*(length-s) # load - e2 component
-n3 = p3+q3*(length-s) # load - e3 component 
-u1 = (psi.dx(0)*sin(chi)-phi.dx(0)*cos(chi)*sin(psi))/stretch
+n1 = p1+q1*(length-s) # resultant contact force - e1 component
+n2 = p2+q2*(length-s) # resultant contact force - e2 component
+n3 = p3+q3*(length-s) # resultant contact force - e3 component 
+u1 = (psi.dx(0)*sin(chi)-phi.dx(0)*cos(chi)*sin(psi))/stretch # flexural strain 1
 U1 = u1-u1S
-u2 = (psi.dx(0)*cos(chi)+phi.dx(0)*sin(chi)*sin(psi))/stretch
+u2 = (psi.dx(0)*cos(chi)+phi.dx(0)*sin(chi)*sin(psi))/stretch # flexural strain 2
 U2 = u2-u2S
-u3 = (chi.dx(0)+phi.dx(0)*cos(psi))/stretch
+u3 = (chi.dx(0)+phi.dx(0)*cos(psi))/stretch # torsional strain
 U3 = u3-u3S
 m1 = B*(cos(psi)*cos(phi)*(U1*cos(chi)-U2*sin(chi))-sin(phi)*(U1*sin(chi)+U2*cos(chi))) \
-     + muJ*U3*sin(psi)*cos(phi) # e1 component of the momentum
+     + muJ*U3*sin(psi)*cos(phi) # resultant contact couple - e1 component
 m2 = B*(cos(psi)*sin(phi)*(U1*cos(chi)-U2*sin(chi))+cos(phi)*(U1*sin(chi)+U2*cos(chi))) \
-     + muJ*U3*sin(psi)*sin(phi) # e2 component of the momentum
+     + muJ*U3*sin(psi)*sin(phi) # resultant contact couple - e2 component
 m3 = -B*sin(psi)*(U1*cos(chi)-U2*sin(chi)) \
-     + muJ*U3*cos(psi)          # e3 component of the momentum
+     + muJ*U3*cos(psi)          # resultant contact couple - e3 component
 u1_rp = (psi_rp.dx(0)*sin(chi_rp)-phi_rp.dx(0)*cos(chi_rp)*sin(psi_rp))/stretch_rp
 u2_rp = (psi_rp.dx(0)*cos(chi_rp)+phi_rp.dx(0)*sin(chi_rp)*sin(psi_rp))/stretch_rp
 H1_r = cos(thetaH_r)
@@ -365,11 +363,11 @@ U2_k = u2_k-u2S_t
 u3_k = chi_t.dx(0)+phi_t.dx(0)*cos(psi_k)/stretch
 U3_k = u3_k-u3S_t
 m1_k = B*(cos(psi_k)*cos(phi_k)*(U1_k*cos(chi_k)-U2_k*sin(chi_k)) -sin(phi_k)*(U1_k*sin(chi_k)+U2_k*cos(chi_k))) \
-       + muJ*U3_k*sin(psi_k)*cos(phi_k) # e1 component of the momentum
+       + muJ*U3_k*sin(psi_k)*cos(phi_k)
 m2_k = B*(cos(psi_k)*sin(phi_k)*(U1_k*cos(chi_k)-U2_k*sin(chi_k))+cos(phi_k)*(U1_k*sin(chi_k)+U2_k*cos(chi_k))) \
-       + muJ*U3_k*sin(psi_k)*sin(phi_k) # e2 component of the momentum
+       + muJ*U3_k*sin(psi_k)*sin(phi_k)
 m3_k = -B*sin(psi_k)*(U1_k*cos(chi_k)-U2_k*sin(chi_k)) \
-       + muJ*U3_k*cos(psi_k)          # e3 component of the momentum
+       + muJ*U3_k*cos(psi_k)
 RHS_alpha_k = cos(alphaH_k)*sin(psi_k)*sin(phi_k)+(cos(psi_k)*sin(chi_k)*sin(phi_k)-cos(chi_k)*cos(phi_k))*sin(alphaH_k)
 RHS_theta_k = cos(thetaH_k)*( cos(alphaH_k)*(cos(chi_k)*cos(phi_k)-cos(psi_k)*sin(chi_k)*sin(phi_k))+sin(alphaH_k)*sin(psi_k)*sin(phi_k) ) -sin(thetaH_k)*( cos(phi_k)*sin(chi_k)+cos(chi_k)*cos(psi_k)*sin(phi_k) ) 
 a = - m1_k*test_chi.dx(0)*dx \
