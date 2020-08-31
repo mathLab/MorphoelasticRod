@@ -25,6 +25,8 @@ LabelSpace= 28
 TickSpace = 12
 TipPts = 12000    # Number of displayed points for tip projections
 RodLineWidth = 3  # Line width of rod
+OldRodColor = '#8d5524'
+RodColor    = '#4f8f00'
 xr = 0.05         # right axis limit
 xl = -xr          # left axis limit
 Background = 'w'  # facecolor
@@ -33,7 +35,7 @@ def save_plot():
     # Plot
     fig = plt.figure(figsize=(height,width))
     ax  = fig.add_subplot(111, projection='3d',facecolor=Background)
-    plt.title('Shoot length: %.5f cm, Shoot time: %.4f min' % (L0*100,t*Tau_s/60),fontsize=TitleSize)
+    plt.title('Shoot length: %.5f cm, Shoot time: %.4f min' % (Lt*100,t*Tau_s/60),fontsize=TitleSize)
     ax.quiver(x[ArrowIndex],y[ArrowIndex],z[ArrowIndex],D1[2],D1[0],D1[1], length=ArrowL, normalize=True, color='b')
     ax.quiver(x[ArrowIndex],y[ArrowIndex],z[ArrowIndex],D2[2],D2[0],D2[1], length=ArrowL, normalize=True)
     ax.quiver(x[ArrowIndex],y[ArrowIndex],z[ArrowIndex],D3[2],D3[0],D3[1], length=ArrowL, normalize=True, color='r')
@@ -45,7 +47,8 @@ def save_plot():
     ax.plot(Xtip[-TipPts:],Ytip[-TipPts:],[Z1]*np.size(Ztip[-TipPts:]),'.',markersize=MarkerSize)
     ax.plot(Xtip[-TipPts:],[Y2]*np.size(Ytip[-TipPts:]),Ztip[-TipPts:],'.',markersize=MarkerSize)
     ax.plot([X1]*np.size(Xtip[-TipPts:]),Ytip[-TipPts:],Ztip[-TipPts:],'.',markersize=MarkerSize)
-    ax.plot(x,y,z,'tab:green',linewidth=RodLineWidth) 
+    ax.plot(x[young],y[young],z[young],color=RodColor,linewidth=RodLineWidth) 
+    ax.plot(x[old],y[old],z[old],color=OldRodColor,linewidth=RodLineWidth)
     # Set labels
     ax.set_xlabel("$\mathbf{e}_3$ [m]",fontsize=LabelSize, labelpad=LabelSpace)
     ax.set_ylabel("$\mathbf{e}_1$ [m]",fontsize=LabelSize, labelpad=LabelSpace)
