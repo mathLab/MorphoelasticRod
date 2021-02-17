@@ -1,6 +1,6 @@
 # MorphoelasticRod
 
-In this repository you find two standalone Python codes that implement the 3D morphoelastic rod models for plant shoots described in the preprint "Nutations in plant shoots: Endogenous and exogenous factors in the presence of mechanical deformations" by Agostinelli D., DeSimone A. and Noselli G. (2020). 
+In this repository you find two standalone Python codes that implement the 3D morphoelastic rod models for plant shoots described in "Nutations in plant shoots: Endogenous and exogenous factors in the presence of mechanical deformations" by Agostinelli D., DeSimone A. and Noselli G. (https://doi.org/10.3389/fpls.2021.608005). 
 The FEniCS Project Version 2019.1.0 is required.
 
 1. ConstantShoot.py is the reduced model in which the rod has spontaneous strains that evolve in time while the length of the shoot is constant. 
